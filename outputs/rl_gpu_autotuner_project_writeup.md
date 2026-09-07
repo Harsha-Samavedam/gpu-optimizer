@@ -26,7 +26,7 @@ Triton is therefore a useful target for this project. It exposes performance-rel
 
 ### Scope
 
-The first real kernel target will be matrix multiplication. The project will later extend to a row-wise reduction, softmax, and one fused operation such as bias-plus-activation or RMSNorm if time allows.
+The first real kernel target is FP16 matrix multiplication, now implemented and benchmarked on an RTX 3070. The project will later extend to a row-wise reduction, softmax, and one fused operation such as bias-plus-activation or RMSNorm if time allows.
 
 The initial action space for matmul is deliberately small and interpretable:
 
@@ -63,7 +63,7 @@ Compile/cache → correctness validation → warm-up → timing
 The system is organized around a benchmark-backend interface. It makes search policies independent of the measurement source:
 
 - `SimulatedBenchmark` provides a deterministic, noisy synthetic latency surface for development without GPU hardware.
-- `TritonBenchmark` will compile and execute real Triton kernels once an NVIDIA GPU is available.
+- `TritonBenchmark` compiles, validates, and measures real Triton kernels using CUDA Graph batches on an NVIDIA GPU.
 - Search policies consume the same workload, candidate, and measurement interfaces regardless of backend.
 
 This separation makes the project testable before hardware access and prevents the RL/search logic from being tied to a single compiler implementation.
@@ -74,7 +74,7 @@ The final version is a finite-horizon, budgeted Markov decision process.
 
 **Episode.** Tune one kernel workload on one target GPU with a fixed number of measurements, such as 16 or 32.
 
-**State.** The state will include kernel kind, shape (for example, `M`, `N`, and `K` for matmul), dtype, selected GPU properties, remaining trial budget, current best latency, and a compact representation of prior configuration/latency observations.
+**State.** The implemented observation includes kernel kind, shape (`M`, `N`, `K`), dtype, supplied GPU features, remaining trial budget, current best latency/configuration, full prior configuration/measurement history, candidate configurations, and an action mask. Numeric feature encoding and a Gymnasium adapter remain future work.
 
 **Action.** Choose the next legal configuration to benchmark. Invalid choices will be removed from the candidate set in advance rather than made an interesting part of the RL task.
 
@@ -83,10 +83,10 @@ The final version is a finite-horizon, budgeted Markov decision process.
 **Reward.** The primary reward is improvement in the incumbent latency:
 
 ```text
-reward_t = max(0, best_latency_before − best_latency_after)
+reward_t = log(best_latency_before / best_latency_after)
 ```
 
-Latency will also be normalized against a fixed baseline for comparisons across workloads.
+The incumbent starts from an independently measured fixed baseline; log improvement is dimensionless and sums to log speedup when the discount factor is one. The baseline cost must be reported equally across policies. Invalid measurements spend budget and incur a penalty. Repeated actions are masked. Without an external baseline, the scaffold uses terminal-only reward `1 / (1 + best_latency_us)` so a slow initial action cannot inflate return; use fixed-baseline mode for cross-workload learning.
 
 **Terminal condition.** The episode ends when the measurement budget is exhausted.
 
@@ -115,16 +115,17 @@ Core metrics will be best latency found at each budget, speedup over the fixed b
 
 ### Current implementation status
 
-The initial Python scaffold is complete and runs without a GPU. It currently provides:
+The simulator and real FP16 GPU backend are implemented. The project currently provides:
 
 - workload and schedule-configuration data models;
 - a constrained, legal candidate search space;
 - a deterministic simulator with controlled measurement noise;
 - random-search and exhaustive-search policies;
 - a budget-enforcing RL-compatible environment;
-- unit tests covering legality, budget behavior, and baseline expectations.
+- regression tests covering legality, graph timing units, budget behavior, invalid measurements, reward incentives, and strict result serialization;
+- a repeated experiment runner with equal random/curated trial budgets, complete trial logs, frozen winners, shuffled confirmation order, and GPU telemetry.
 
-The next implementation milestone is a correct Triton matmul kernel and a hardware-backed benchmark interface. This must include PyTorch-reference validation, warm-up handling, robust timing, compilation-cache behavior, and reproducible experiment logs before any RL training begins.
+The next milestone is a larger dataset with explicit held-out shapes and a non-RL cost model/contextual-bandit comparison. The early single-launch timing result is historical only: current experiments use medians of CUDA Graph batch means on repeated hot buffers. This reduces host launch gaps but does not measure cold-cache or end-to-end request latency. See the README and the dated experiment report for measured results and limitations.
 
 ### Relationship to existing work
 
