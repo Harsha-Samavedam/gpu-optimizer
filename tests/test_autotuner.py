@@ -26,12 +26,18 @@ class AutotunerTests(unittest.TestCase):
         self.assertFalse(ScheduleConfig(16, 16, 16, 16, 1).is_legal())
 
     def test_exhaustive_is_no_worse_than_same_budget_random(self) -> None:
-        random_result = random_search(self.benchmark, self.workload, self.candidates, budget=12, seed=4)
+        random_result = random_search(
+            self.benchmark, self.workload, self.candidates, budget=12, seed=4
+        )
         oracle = exhaustive_search(self.benchmark, self.workload, self.candidates)
-        self.assertLessEqual(oracle.measurement.latency_us, random_result.measurement.latency_us)
+        self.assertLessEqual(
+            oracle.measurement.latency_us, random_result.measurement.latency_us
+        )
 
     def test_environment_enforces_budget(self) -> None:
-        env = TuningEnvironment(self.benchmark, self.workload, self.candidates, budget=2)
+        env = TuningEnvironment(
+            self.benchmark, self.workload, self.candidates, budget=2
+        )
         _, _, done, _ = env.step(0)
         self.assertFalse(done)
         _, _, done, _ = env.step(1)
@@ -46,6 +52,7 @@ class AutotunerTests(unittest.TestCase):
     def test_cli_writes_simulated_results(self) -> None:
         # Keep the migration-time result format testable without CUDA/Triton.
         from unittest.mock import patch
+
         from rl_gpu_autotuner import cli
 
         with TemporaryDirectory() as directory:

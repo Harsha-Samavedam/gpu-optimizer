@@ -45,7 +45,7 @@ def _matmul_kernel(
     b_ptrs = b_ptr + offsets_k[:, None] * stride_bk + offsets_n[None, :] * stride_bn
     accumulator = tl.zeros((BLOCK_M, BLOCK_N), dtype=tl.float32)
 
-    for k_block in range(0, tl.cdiv(K, BLOCK_K)):
+    for k_block in range(tl.cdiv(K, BLOCK_K)):
         k_offsets = k_block * BLOCK_K + offsets_k
         a = tl.load(
             a_ptrs,
@@ -62,10 +62,14 @@ def _matmul_kernel(
         b_ptrs += BLOCK_K * stride_bk
 
     c_ptrs = c_ptr + offsets_m[:, None] * stride_cm + offsets_n[None, :] * stride_cn
-    tl.store(c_ptrs, accumulator.to(tl.float16), mask=(offsets_m[:, None] < M) & (offsets_n[None, :] < N))
+    tl.store(
+        c_ptrs,
+        accumulator.to(tl.float16),
+        mask=(offsets_m[:, None] < M) & (offsets_n[None, :] < N),
+    )
 
 
-def matmul_fp16(a, b, c, config: ScheduleConfig, group_size_m: int = 8) -> None:
+def matmul_fp16(a, b, c, config: ScheduleConfig) -> None:
     """Launch the parameterized FP16 matmul kernel.
 
     Inputs must be contiguous rank-2 CUDA tensors with shapes ``[M, K]`` and
@@ -79,7 +83,9 @@ def matmul_fp16(a, b, c, config: ScheduleConfig, group_size_m: int = 8) -> None:
     if b_k != K or tuple(c.shape) != (M, N):
         raise ValueError("incompatible matmul tensor shapes")
 
-    grid = lambda meta: (triton.cdiv(M, meta["BLOCK_M"]) * triton.cdiv(N, meta["BLOCK_N"]),)
+    grid = lambda meta: (
+        triton.cdiv(M, meta["BLOCK_M"]) * triton.cdiv(N, meta["BLOCK_N"]),
+    )
     _matmul_kernel[grid](
         a,
         b,
@@ -96,7 +102,7 @@ def matmul_fp16(a, b, c, config: ScheduleConfig, group_size_m: int = 8) -> None:
         BLOCK_M=config.block_m,
         BLOCK_N=config.block_n,
         BLOCK_K=config.block_k,
-        GROUP_SIZE_M=group_size_m,
+        GROUP_SIZE_M=config.group_size_m,
         num_warps=config.num_warps,
         num_stages=config.num_stages,
     )

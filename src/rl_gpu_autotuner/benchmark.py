@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import math
+import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-import random
 
 from .domain import KernelKind, ScheduleConfig, Workload
 
@@ -14,6 +15,12 @@ class Measurement:
     detail: str = ""
     samples_us: tuple[float, ...] = ()
     device: str = ""
+    timing_method: str = "simulated"
+    batch_size: int = 1
+
+    @property
+    def usable(self) -> bool:
+        return self.valid and math.isfinite(self.latency_us) and self.latency_us > 0
 
 
 class Benchmark(ABC):
@@ -36,7 +43,9 @@ class SimulatedBenchmark(Benchmark):
 
     def evaluate(self, workload: Workload, config: ScheduleConfig) -> Measurement:
         if not config.is_legal():
-            return Measurement(float("inf"), valid=False, detail="illegal configuration")
+            return Measurement(
+                float("inf"), valid=False, detail="illegal configuration"
+            )
 
         volume = 1
         for dimension in workload.shape:
@@ -58,5 +67,7 @@ class SimulatedBenchmark(Benchmark):
         raw = base_us * tile_penalty * k_penalty * warp_penalty * stage_penalty
 
         signature = hash((self._seed, workload, config)) & 0xFFFFFFFF
-        noise = random.Random(signature).uniform(-self._noise_fraction, self._noise_fraction)
+        noise = random.Random(signature).uniform(
+            -self._noise_fraction, self._noise_fraction
+        )
         return Measurement(latency_us=raw * (1 + noise))

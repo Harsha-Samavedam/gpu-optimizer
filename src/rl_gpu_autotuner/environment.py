@@ -1,35 +1,112 @@
 from __future__ import annotations
 
+import math
+
 from .benchmark import Benchmark
 from .domain import ScheduleConfig, Workload
+from .policies import Trial
 
 
 class TuningEnvironment:
-    """Minimal RL-compatible environment: each action spends one measurement."""
+    """Budgeted search with observable history and one measurement per action.
 
-    def __init__(self, benchmark: Benchmark, workload: Workload, candidates: list[ScheduleConfig], budget: int):
+    A supplied baseline is measured separately and its cost must be reported by
+    the experiment. Without one, the first usable trial anchors the reward.
+    Repeated actions are masked; independent finalist validation belongs outside
+    the search budget and must not be used to select a different winner.
+    """
+
+    def __init__(
+        self,
+        benchmark: Benchmark,
+        workload: Workload,
+        candidates: list[ScheduleConfig],
+        budget: int,
+        baseline_latency_us: float | None = None,
+        device_features: dict[str, object] | None = None,
+    ):
+        if budget < 1 or not candidates or len(set(candidates)) != len(candidates):
+            raise ValueError("positive budget and non-empty unique candidates required")
+        if baseline_latency_us is not None and (
+            not math.isfinite(baseline_latency_us) or baseline_latency_us <= 0
+        ):
+            raise ValueError("baseline must be positive and finite")
         self.benchmark, self.workload = benchmark, workload
-        self.candidates, self.budget = candidates, budget
+        self.candidates, self.budget = tuple(candidates), budget
+        self.baseline_latency_us = baseline_latency_us
+        self.device_features = dict(device_features or {})
         self.reset()
 
-    def reset(self) -> dict[str, int]:
+    def reset(self) -> dict[str, object]:
         self.evaluations = 0
-        self.best_latency = float("inf")
+        self.best_latency = (
+            self.baseline_latency_us
+            if self.baseline_latency_us is not None
+            else float("inf")
+        )
+        self.best_config: ScheduleConfig | None = None
+        self.history: list[Trial] = []
+        self.tried: set[int] = set()
         return self.observation()
 
-    def observation(self) -> dict[str, int]:
-        return {"evaluations_remaining": self.budget - self.evaluations, "candidate_count": len(self.candidates)}
+    def observation(self) -> dict[str, object]:
+        done = self.evaluations >= self.budget or len(self.tried) == len(
+            self.candidates
+        )
+        return {
+            "kernel": self.workload.kernel.value,
+            "shape": self.workload.shape,
+            "dtype": self.workload.dtype,
+            "device_features": dict(self.device_features),
+            "evaluations_remaining": self.budget - self.evaluations,
+            "candidate_count": len(self.candidates),
+            "candidates": self.candidates,
+            "baseline_latency_us": self.baseline_latency_us,
+            "best_latency_us": self.best_latency
+            if math.isfinite(self.best_latency)
+            else None,
+            "best_config": self.best_config,
+            "history": tuple(self.history),
+            "action_mask": tuple(
+                not done and i not in self.tried for i in range(len(self.candidates))
+            ),
+        }
 
-    def step(self, action: int) -> tuple[dict[str, int], float, bool, dict[str, float]]:
+    def step(
+        self, action: int
+    ) -> tuple[dict[str, object], float, bool, dict[str, object]]:
+        if self.evaluations >= self.budget or len(self.tried) == len(self.candidates):
+            raise RuntimeError("measurement budget or candidates exhausted; call reset")
         if not 0 <= action < len(self.candidates):
             raise IndexError("action must index a candidate configuration")
-        if self.evaluations >= self.budget:
-            raise RuntimeError("measurement budget exhausted; call reset")
+        if action in self.tried:
+            raise ValueError("configuration already measured in this episode")
         measurement = self.benchmark.evaluate(self.workload, self.candidates[action])
         previous_best = self.best_latency
-        self.best_latency = min(self.best_latency, measurement.latency_us)
+        reward = -1.0
+        if measurement.usable:
+            if measurement.latency_us < self.best_latency:
+                self.best_latency = measurement.latency_us
+                self.best_config = self.candidates[action]
+            reward = (
+                0.0
+                if not math.isfinite(previous_best)
+                else math.log(previous_best / self.best_latency)
+            )
+        self.history.append(Trial(self.candidates[action], measurement))
+        self.tried.add(action)
         self.evaluations += 1
-        # Positive reward only for an improvement over the incumbent.
-        reward = 0.0 if previous_best == float("inf") else max(0.0, previous_best - self.best_latency)
-        done = self.evaluations >= self.budget
-        return self.observation(), reward, done, {"latency_us": measurement.latency_us, "best_latency_us": self.best_latency}
+        done = self.evaluations >= self.budget or len(self.tried) == len(
+            self.candidates
+        )
+        return (
+            self.observation(),
+            reward,
+            done,
+            {
+                "latency_us": measurement.latency_us,
+                "best_latency_us": self.best_latency,
+                "valid": measurement.usable,
+                "detail": measurement.detail,
+            },
+        )
