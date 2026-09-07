@@ -33,16 +33,35 @@ class BanditExperimentTests(unittest.TestCase):
         prior = LinearUCB(len(context_features(workload, experiments.FIXED)))
         old_inverse = prior.inverse.copy()
         FakeBenchmark.calls = 0
-        with TemporaryDirectory() as directory, patch.object(experiments, 'TritonBenchmark', FakeBenchmark), patch.object(experiments, 'benchmark_torch_matmul', return_value=Measurement(10)), patch.object(experiments, 'telemetry', return_value={}):
-            case = experiments.run_case(workload, 2, Path(directory)/'case', budget=3, rounds=3,
-                                        repetitions=3, batch_size=2, bandit_model=prior)
-        for method in ('random', 'curated', 'bandit'):
-            self.assertEqual(case['search'][method]['evaluations'], 3)
-            configs = [tuple(t['config'].values()) for t in case['search'][method]['history']]
+        with (
+            TemporaryDirectory() as directory,
+            patch.object(experiments, "TritonBenchmark", FakeBenchmark),
+            patch.object(
+                experiments, "benchmark_torch_matmul", return_value=Measurement(10)
+            ),
+            patch.object(experiments, "telemetry", return_value={}),
+        ):
+            case = experiments.run_case(
+                workload,
+                2,
+                Path(directory) / "case",
+                budget=3,
+                rounds=3,
+                repetitions=3,
+                batch_size=2,
+                bandit_model=prior,
+            )
+        for method in ("random", "curated", "bandit"):
+            self.assertEqual(case["search"][method]["evaluations"], 3)
+            configs = [
+                tuple(t["config"].values()) for t in case["search"][method]["history"]
+            ]
             self.assertEqual(len(set(configs)), 3)
-        self.assertEqual(case['confirmation_budget']['measurements_per_round'], 5)
-        self.assertEqual(FakeBenchmark.calls, 1 + 9 + 3*4)
+        self.assertEqual(case["confirmation_budget"]["measurements_per_round"], 6)
+        self.assertEqual(FakeBenchmark.calls, 1 + 9 + 3 * 5)
         self.assertEqual(prior.observations, 0)
         np.testing.assert_array_equal(prior.inverse, old_inverse)
-        self.assertEqual(case['bandit_updates'], 3)
-        self.assertEqual(len(case['budget_curve']['bandit']), 3)
+        self.assertEqual(case["bandit_updates"], 3)
+        self.assertEqual(case["first_choice"], case["search"]["bandit"]["history"][0]["config"])
+        self.assertIn("bandit_first", case["summary"])
+        self.assertEqual(len(case["budget_curve"]["bandit"]), 3)
