@@ -74,7 +74,7 @@ The final version is a finite-horizon, budgeted Markov decision process.
 
 **Episode.** Tune one kernel workload on one target GPU with a fixed number of measurements, such as 16 or 32.
 
-**State.** The implemented observation includes kernel kind, shape (`M`, `N`, `K`), dtype, supplied GPU features, remaining trial budget, current best latency/configuration, full prior configuration/measurement history, candidate configurations, and an action mask. Numeric feature encoding and a Gymnasium adapter remain future work.
+**State.** The implemented observation includes kernel kind, shape (`M`, `N`, `K`), dtype, supplied GPU features, remaining trial budget, current best latency/configuration, full prior configuration/measurement history, candidate configurations, and an action mask. The contextual bandit now uses 67 numeric workload/configuration features; a Gymnasium adapter remains future work.
 
 **Action.** Choose the next legal configuration to benchmark. Invalid choices will be removed from the candidate set in advance rather than made an interesting part of the RL task.
 
@@ -90,7 +90,7 @@ The incumbent starts from an independently measured fixed baseline; log improvem
 
 **Terminal condition.** The episode ends when the measurement budget is exhausted.
 
-Before full RL, the project will implement a contextual-bandit policy. That policy observes workload and GPU features, recommends one complete schedule, and receives negative latency as reward. This establishes whether the available features predict good schedules before adding the complexity of sequential exploration.
+The implemented contextual bandit ranks complete schedules using workload, tile, and estimated resource features. It learns clipped log speedup against a separately measured fixed reference and updates after each of its own trials. Its parameters are specific to the training GPU/runtime. Both the first recommendation and the result after 16 trials are confirmed independently; this is not a trained full sequential RL policy.
 
 ### Why RL—and why not assume it wins?
 
@@ -123,9 +123,10 @@ The simulator and real FP16 GPU backend are implemented. The project currently p
 - random-search and exhaustive-search policies;
 - a budget-enforcing RL-compatible environment;
 - regression tests covering legality, graph timing units, budget behavior, invalid measurements, reward incentives, and strict result serialization;
-- a repeated experiment runner with equal random/curated trial budgets, complete trial logs, frozen winners, shuffled confirmation order, and GPU telemetry.
+- a repeated experiment runner with equal random/curated/bandit trial budgets, complete trial logs, frozen winners, shuffled confirmation order, and GPU telemetry;
+- a trained LinearUCB model, training-only hyperparameter selection, and disjoint training/evaluation shapes.
 
-The next milestone is a larger dataset with explicit held-out shapes and a non-RL cost model/contextual-bandit comparison. The early single-launch timing result is historical only: current experiments use medians of CUDA Graph batch means on repeated hot buffers. This reduces host launch gaps but does not measure cold-cache or end-to-end request latency. See the README and the dated experiment report for measured results and limitations.
+The next milestone is broader training coverage and tuning under elapsed-time budgets. The early single-launch timing result is historical only: current experiments use medians of CUDA Graph batch means on repeated hot buffers. This reduces host launch gaps but does not measure cold-cache or end-to-end request latency. See the README and the dated experiment reports for measured results and limitations.
 
 ### Relationship to existing work
 

@@ -1,0 +1,796 @@
+[
+  {
+    "cases": 12,
+    "confirmation_evaluations": 360,
+    "invalid_measurements": 0,
+    "method_costs": {
+      "bandit": {
+        "decision_wall_s": 0.11003402500318771,
+        "median_decision_ms_per_trial": 0.5712142500158279,
+        "median_trial_wall_s": 0.6366461714997058,
+        "trial_wall_s": 101.86927944000035
+      },
+      "curated": {
+        "decision_wall_s": 0.0001443839937564917,
+        "median_decision_ms_per_trial": 0.0007513123989610904,
+        "median_trial_wall_s": 0.7295473025001229,
+        "trial_wall_s": 194.95061159399302
+      },
+      "random": {
+        "decision_wall_s": 0.00016703999335732078,
+        "median_decision_ms_per_trial": 0.0007982811496276554,
+        "median_trial_wall_s": 0.9559025605003626,
+        "trial_wall_s": 304.7403315940028
+      }
+    },
+    "reference_evaluations": 12,
+    "search_evaluations": 576,
+    "search_wall_s": 601.7209977860002,
+    "setup_wall_s": 6.8589268880004965,
+    "shapes": [
+      {
+        "bandit_reduction": {
+          "bandit_first": {
+            "median_percent": 18.770412185109098,
+            "seed_max_percent": 18.797739917383716,
+            "seed_min_percent": 18.28921758990051,
+            "seed_values_percent": [
+              18.28921758990051,
+              18.770412185109098,
+              18.797739917383716
+            ]
+          },
+          "curated": {
+            "median_percent": 20.30405299864824,
+            "seed_max_percent": 20.715270487778582,
+            "seed_min_percent": 19.543828102673743,
+            "seed_values_percent": [
+              19.543828102673743,
+              20.715270487778582,
+              20.30405299864824
+            ]
+          },
+          "fixed": {
+            "median_percent": 20.20208993200606,
+            "seed_max_percent": 20.722255242856413,
+            "seed_min_percent": 19.60756029370443,
+            "seed_values_percent": [
+              19.60756029370443,
+              20.722255242856413,
+              20.20208993200606
+            ]
+          },
+          "pytorch": {
+            "median_percent": 21.170710477783928,
+            "seed_max_percent": 21.234514992536567,
+            "seed_min_percent": 20.968186446397073,
+            "seed_values_percent": [
+              21.170710477783928,
+              21.234514992536567,
+              20.968186446397073
+            ]
+          },
+          "random": {
+            "median_percent": 20.74610664012595,
+            "seed_max_percent": 21.297283329521477,
+            "seed_min_percent": 19.15331388898842,
+            "seed_values_percent": [
+              19.15331388898842,
+              20.74610664012595,
+              21.297283329521477
+            ]
+          }
+        },
+        "latencies": {
+          "bandit": {
+            "median_us": 44.76400092244148,
+            "seed_max_us": 45.712001621723175,
+            "seed_min_us": 44.76400092244148
+          },
+          "bandit_first": {
+            "median_us": 55.0060011446476,
+            "seed_max_us": 56.29400163888931,
+            "seed_min_us": 54.80799823999405
+          },
+          "curated": {
+            "median_us": 56.46799877285957,
+            "seed_max_us": 57.35800042748451,
+            "seed_min_us": 55.52000179886818
+          },
+          "fixed": {
+            "median_us": 56.30199983716011,
+            "seed_max_us": 57.26400017738342,
+            "seed_min_us": 55.58399856090546
+          },
+          "pytorch": {
+            "median_us": 56.832000613212585,
+            "seed_max_us": 57.840000838041306,
+            "seed_min_us": 56.78600072860718
+          },
+          "random": {
+            "median_us": 56.478001177310944,
+            "seed_max_us": 58.21400135755539,
+            "seed_min_us": 55.33599853515625
+          }
+        },
+        "shape": [
+          1000,
+          769,
+          513
+        ]
+      },
+      {
+        "bandit_reduction": {
+          "bandit_first": {
+            "median_percent": -0.06307831814273968,
+            "seed_max_percent": 0.05889544489594556,
+            "seed_min_percent": -0.16521037074419542,
+            "seed_values_percent": [
+              0.05889544489594556,
+              -0.16521037074419542,
+              -0.06307831814273968
+            ]
+          },
+          "curated": {
+            "median_percent": -0.07646931141571667,
+            "seed_max_percent": 0.29956627358198595,
+            "seed_min_percent": -0.23125733167974616,
+            "seed_values_percent": [
+              -0.07646931141571667,
+              0.29956627358198595,
+              -0.23125733167974616
+            ]
+          },
+          "fixed": {
+            "median_percent": 4.7646377459185985,
+            "seed_max_percent": 5.880063845597339,
+            "seed_min_percent": 4.646431123509165,
+            "seed_values_percent": [
+              5.880063845597339,
+              4.646431123509165,
+              4.7646377459185985
+            ]
+          },
+          "pytorch": {
+            "median_percent": 22.775237423771454,
+            "seed_max_percent": 22.89098000224995,
+            "seed_min_percent": 22.752019408346825,
+            "seed_values_percent": [
+              22.775237423771454,
+              22.89098000224995,
+              22.752019408346825
+            ]
+          },
+          "random": {
+            "median_percent": 6.125775586542892,
+            "seed_max_percent": 10.70671792264719,
+            "seed_min_percent": 5.976556403605904,
+            "seed_values_percent": [
+              5.976556403605904,
+              6.125775586542892,
+              10.70671792264719
+            ]
+          }
+        },
+        "latencies": {
+          "bandit": {
+            "median_us": 66.68200343847275,
+            "seed_max_us": 68.04999709129333,
+            "seed_min_us": 66.54199957847595
+          },
+          "bandit_first": {
+            "median_us": 66.59399718046188,
+            "seed_max_us": 67.92999804019928,
+            "seed_min_us": 66.58200174570084
+          },
+          "curated": {
+            "median_us": 66.66400283575058,
+            "seed_max_us": 67.99600273370743,
+            "seed_min_us": 66.59399718046188
+          },
+          "fixed": {
+            "median_us": 69.77400183677673,
+            "seed_max_us": 72.17349857091904,
+            "seed_min_us": 69.76400315761566
+          },
+          "pytorch": {
+            "median_us": 86.32200211286545,
+            "seed_max_us": 88.17999809980392,
+            "seed_min_us": 86.26999706029892
+          },
+          "random": {
+            "median_us": 72.43800163269043,
+            "seed_max_us": 74.62599873542786,
+            "seed_min_us": 70.74599713087082
+          }
+        },
+        "shape": [
+          1024,
+          1024,
+          1024
+        ]
+      },
+      {
+        "bandit_reduction": {
+          "bandit_first": {
+            "median_percent": 1.3576681939680868,
+            "seed_max_percent": 1.5801570422880329,
+            "seed_min_percent": 1.2697143037334602,
+            "seed_values_percent": [
+              1.3576681939680868,
+              1.5801570422880329,
+              1.2697143037334602
+            ]
+          },
+          "curated": {
+            "median_percent": -0.1064230888004003,
+            "seed_max_percent": 0.39346313685872936,
+            "seed_min_percent": -0.3211908647421158,
+            "seed_values_percent": [
+              -0.3211908647421158,
+              0.39346313685872936,
+              -0.1064230888004003
+            ]
+          },
+          "fixed": {
+            "median_percent": 5.781039877356797,
+            "seed_max_percent": 5.896635945228656,
+            "seed_min_percent": 4.923225374270235,
+            "seed_values_percent": [
+              5.896635945228656,
+              5.781039877356797,
+              4.923225374270235
+            ]
+          },
+          "pytorch": {
+            "median_percent": 47.8670166626762,
+            "seed_max_percent": 48.098474374951884,
+            "seed_min_percent": 47.76851148063037,
+            "seed_values_percent": [
+              47.8670166626762,
+              48.098474374951884,
+              47.76851148063037
+            ]
+          },
+          "random": {
+            "median_percent": 5.603964223294233,
+            "seed_max_percent": 12.445884853937129,
+            "seed_min_percent": 5.29888273032083,
+            "seed_values_percent": [
+              5.29888273032083,
+              5.603964223294233,
+              12.445884853937129
+            ]
+          }
+        },
+        "latencies": {
+          "bandit": {
+            "median_us": 66.67599827051163,
+            "seed_max_us": 66.7319968342781,
+            "seed_min_us": 66.40800088644028
+          },
+          "bandit_first": {
+            "median_us": 67.74599850177765,
+            "seed_max_us": 67.79581308364868,
+            "seed_min_us": 67.65162199735641
+          },
+          "curated": {
+            "median_us": 66.59000366926193,
+            "seed_max_us": 66.74599647521973,
+            "seed_min_us": 66.37799739837646
+          },
+          "fixed": {
+            "median_us": 70.37600129842758,
+            "seed_max_us": 70.50199806690216,
+            "seed_min_us": 69.94599848985672
+          },
+          "pytorch": {
+            "median_us": 127.80800461769104,
+            "seed_max_us": 127.89599597454071,
+            "seed_min_us": 127.76200473308563
+          },
+          "random": {
+            "median_us": 70.41999697685242,
+            "seed_max_us": 76.21800154447556,
+            "seed_min_us": 70.2740028500557
+          }
+        },
+        "shape": [
+          512,
+          2048,
+          1024
+        ]
+      },
+      {
+        "bandit_reduction": {
+          "bandit_first": {
+            "median_percent": 17.880083029872406,
+            "seed_max_percent": 18.490624755529616,
+            "seed_min_percent": 17.100822449469753,
+            "seed_values_percent": [
+              18.490624755529616,
+              17.100822449469753,
+              17.880083029872406
+            ]
+          },
+          "curated": {
+            "median_percent": 2.2359613412263557,
+            "seed_max_percent": 2.9932442143136617,
+            "seed_min_percent": 2.073111444622844,
+            "seed_values_percent": [
+              2.9932442143136617,
+              2.073111444622844,
+              2.2359613412263557
+            ]
+          },
+          "fixed": {
+            "median_percent": 17.93145787820749,
+            "seed_max_percent": 18.377709724795388,
+            "seed_min_percent": 16.909841366199153,
+            "seed_values_percent": [
+              18.377709724795388,
+              16.909841366199153,
+              17.93145787820749
+            ]
+          },
+          "pytorch": {
+            "median_percent": 16.80074119677547,
+            "seed_max_percent": 17.069744492260273,
+            "seed_min_percent": 15.857049473775364,
+            "seed_values_percent": [
+              17.069744492260273,
+              15.857049473775364,
+              16.80074119677547
+            ]
+          },
+          "random": {
+            "median_percent": 14.412272241459634,
+            "seed_max_percent": 16.606386025504527,
+            "seed_min_percent": 0.5746061903692423,
+            "seed_values_percent": [
+              16.606386025504527,
+              14.412272241459634,
+              0.5746061903692423
+            ]
+          }
+        },
+        "latencies": {
+          "bandit": {
+            "median_us": 10.739999823272228,
+            "seed_max_us": 10.820000432431698,
+            "seed_min_us": 10.63000038266182
+          },
+          "bandit_first": {
+            "median_us": 13.08200042694807,
+            "seed_max_us": 13.092000037431717,
+            "seed_min_us": 13.031999580562115
+          },
+          "curated": {
+            "median_us": 11.00200042128563,
+            "seed_max_us": 11.060000397264957,
+            "seed_min_us": 10.958000086247921
+          },
+          "fixed": {
+            "median_us": 13.07199988514185,
+            "seed_max_us": 13.086000457406044,
+            "seed_min_us": 13.030000030994415
+          },
+          "pytorch": {
+            "median_us": 12.918000109493732,
+            "seed_max_us": 12.922000139951706,
+            "seed_min_us": 12.81800027936697
+          },
+          "random": {
+            "median_us": 12.670000083744526,
+            "seed_max_us": 12.729999609291553,
+            "seed_min_us": 10.78999973833561
+          }
+        },
+        "shape": [
+          512,
+          512,
+          512
+        ]
+      }
+    ],
+    "suite": "bandit_suite_v1",
+    "total_wall_s": 795.9287428950001
+  },
+  {
+    "cases": 12,
+    "confirmation_evaluations": 360,
+    "invalid_measurements": 0,
+    "method_costs": {
+      "bandit": {
+        "decision_wall_s": 0.10980605399527121,
+        "median_decision_ms_per_trial": 0.5768476248704246,
+        "median_trial_wall_s": 0.4647276409996266,
+        "trial_wall_s": 116.15100469399295
+      },
+      "curated": {
+        "decision_wall_s": 0.00016756601144152228,
+        "median_decision_ms_per_trial": 0.0007873752565501491,
+        "median_trial_wall_s": 0.5535778379999101,
+        "trial_wall_s": 258.9474941489934
+      },
+      "random": {
+        "decision_wall_s": 0.00016361498092010152,
+        "median_decision_ms_per_trial": 0.00082353130892443,
+        "median_trial_wall_s": 0.7410072789998594,
+        "trial_wall_s": 301.0328953160097
+      }
+    },
+    "reference_evaluations": 12,
+    "search_evaluations": 576,
+    "search_wall_s": 676.2923804799993,
+    "setup_wall_s": 7.292056358000991,
+    "shapes": [
+      {
+        "bandit_reduction": {
+          "bandit_first": {
+            "median_percent": 0.46026485934824724,
+            "seed_max_percent": 0.4835365545648118,
+            "seed_min_percent": -0.31932157212613,
+            "seed_values_percent": [
+              0.4835365545648118,
+              0.46026485934824724,
+              -0.31932157212613
+            ]
+          },
+          "curated": {
+            "median_percent": -3.417491200197076,
+            "seed_max_percent": -3.1560737079674217,
+            "seed_min_percent": -4.41495279504216,
+            "seed_values_percent": [
+              -3.417491200197076,
+              -3.1560737079674217,
+              -4.41495279504216
+            ]
+          },
+          "fixed": {
+            "median_percent": 3.3484690713652454,
+            "seed_max_percent": 3.3493583500904256,
+            "seed_min_percent": 2.2299979235276934,
+            "seed_values_percent": [
+              3.3484690713652454,
+              3.3493583500904256,
+              2.2299979235276934
+            ]
+          },
+          "pytorch": {
+            "median_percent": -15.064418345322794,
+            "seed_max_percent": -15.057954172840237,
+            "seed_min_percent": -15.10827189902968,
+            "seed_values_percent": [
+              -15.064418345322794,
+              -15.057954172840237,
+              -15.10827189902968
+            ]
+          },
+          "random": {
+            "median_percent": 3.7062194762080725,
+            "seed_max_percent": 4.469855448903082,
+            "seed_min_percent": 3.665399339075892,
+            "seed_values_percent": [
+              4.469855448903082,
+              3.7062194762080725,
+              3.665399339075892
+            ]
+          }
+        },
+        "latencies": {
+          "bandit": {
+            "median_us": 96.69400006532669,
+            "seed_max_us": 97.3920002579689,
+            "seed_min_us": 96.49600088596344
+          },
+          "bandit_first": {
+            "median_us": 97.10200130939484,
+            "seed_max_us": 97.10399806499481,
+            "seed_min_us": 97.04799950122833
+          },
+          "curated": {
+            "median_us": 93.39399635791779,
+            "seed_max_us": 93.5320034623146,
+            "seed_min_us": 93.3540016412735
+          },
+          "fixed": {
+            "median_us": 99.84000027179718,
+            "seed_max_us": 99.99600052833557,
+            "seed_min_us": 99.81200098991394
+          },
+          "pytorch": {
+            "median_us": 84.0660035610199,
+            "seed_max_us": 84.48600023984909,
+            "seed_min_us": 83.97600054740906
+          },
+          "random": {
+            "median_us": 101.09800100326538,
+            "seed_max_us": 101.25599801540375,
+            "seed_min_us": 100.21000355482101
+          }
+        },
+        "shape": [
+          1023,
+          1025,
+          767
+        ]
+      },
+      {
+        "bandit_reduction": {
+          "bandit_first": {
+            "median_percent": 13.42207384227725,
+            "seed_max_percent": 13.57028319817929,
+            "seed_min_percent": 13.337780501930697,
+            "seed_values_percent": [
+              13.57028319817929,
+              13.42207384227725,
+              13.337780501930697
+            ]
+          },
+          "curated": {
+            "median_percent": -1.6944729743588072,
+            "seed_max_percent": -1.6483210057331998,
+            "seed_min_percent": -1.7912338900164304,
+            "seed_values_percent": [
+              -1.6483210057331998,
+              -1.6944729743588072,
+              -1.7912338900164304
+            ]
+          },
+          "fixed": {
+            "median_percent": -1.596778709149138,
+            "seed_max_percent": -1.4937806964894662,
+            "seed_min_percent": -1.9183603518664105,
+            "seed_values_percent": [
+              -1.9183603518664105,
+              -1.4937806964894662,
+              -1.596778709149138
+            ]
+          },
+          "pytorch": {
+            "median_percent": 15.762122945872436,
+            "seed_max_percent": 15.837928268057844,
+            "seed_min_percent": 15.68814195398598,
+            "seed_values_percent": [
+              15.68814195398598,
+              15.762122945872436,
+              15.837928268057844
+            ]
+          },
+          "random": {
+            "median_percent": -1.2494792583863656,
+            "seed_max_percent": 20.488486547317574,
+            "seed_min_percent": -3.5881265188696387,
+            "seed_values_percent": [
+              -3.5881265188696387,
+              -1.2494792583863656,
+              20.488486547317574
+            ]
+          }
+        },
+        "latencies": {
+          "bandit": {
+            "median_us": 39.000000804662704,
+            "seed_max_us": 39.00400176644325,
+            "seed_min_us": 38.86999934911728
+          },
+          "bandit_first": {
+            "median_us": 45.010000467300415,
+            "seed_max_us": 45.093998312950134,
+            "seed_min_us": 44.9259988963604
+          },
+          "curated": {
+            "median_us": 38.34199905395508,
+            "seed_max_us": 38.359999656677246,
+            "seed_min_us": 38.27600181102753
+          },
+          "fixed": {
+            "median_us": 38.346000015735626,
+            "seed_max_us": 38.426000624895096,
+            "seed_min_us": 38.30600157380104
+          },
+          "pytorch": {
+            "median_us": 46.2459996342659,
+            "seed_max_us": 46.261999756097794,
+            "seed_min_us": 46.19399830698967
+          },
+          "random": {
+            "median_us": 38.50400075316429,
+            "seed_max_us": 48.875998705625534,
+            "seed_min_us": 37.62400150299072
+          }
+        },
+        "shape": [
+          2048,
+          256,
+          1024
+        ]
+      },
+      {
+        "bandit_reduction": {
+          "bandit_first": {
+            "median_percent": 0.03368468872461117,
+            "seed_max_percent": 0.08410833880965196,
+            "seed_min_percent": -0.4871428000176037,
+            "seed_values_percent": [
+              -0.4871428000176037,
+              0.03368468872461117,
+              0.08410833880965196
+            ]
+          },
+          "curated": {
+            "median_percent": -3.7584736153094545,
+            "seed_max_percent": -3.613542354081112,
+            "seed_min_percent": -3.894819140098904,
+            "seed_values_percent": [
+              -3.613542354081112,
+              -3.7584736153094545,
+              -3.894819140098904
+            ]
+          },
+          "fixed": {
+            "median_percent": -0.4186762773188413,
+            "seed_max_percent": -0.24190496967699815,
+            "seed_min_percent": -0.7126216036698718,
+            "seed_values_percent": [
+              -0.4186762773188413,
+              -0.7126216036698718,
+              -0.24190496967699815
+            ]
+          },
+          "pytorch": {
+            "median_percent": -1.0901896644878395,
+            "seed_max_percent": -0.4834877383738556,
+            "seed_min_percent": -1.1202775166496703,
+            "seed_values_percent": [
+              -1.0901896644878395,
+              -0.4834877383738556,
+              -1.1202775166496703
+            ]
+          },
+          "random": {
+            "median_percent": 1.3149774857289187,
+            "seed_max_percent": 2.591156890656532,
+            "seed_min_percent": -0.11670428846681791,
+            "seed_values_percent": [
+              1.3149774857289187,
+              -0.11670428846681791,
+              2.591156890656532
+            ]
+          }
+        },
+        "latencies": {
+          "bandit": {
+            "median_us": 35.613998770713806,
+            "seed_max_us": 35.638000816106796,
+            "seed_min_us": 35.48000007867813
+          },
+          "bandit_first": {
+            "median_us": 35.6220006942749,
+            "seed_max_us": 35.638000816106796,
+            "seed_min_us": 35.307999700307846
+          },
+          "curated": {
+            "median_us": 34.3019999563694,
+            "seed_max_us": 34.3639999628067,
+            "seed_min_us": 34.18799862265587
+          },
+          "fixed": {
+            "median_us": 35.378001630306244,
+            "seed_max_us": 35.551998764276505,
+            "seed_min_us": 35.30599921941757
+          },
+          "pytorch": {
+            "median_us": 35.17000004649162,
+            "seed_max_us": 35.48400104045868,
+            "seed_min_us": 35.10599955916405
+          },
+          "random": {
+            "median_us": 35.92599928379059,
+            "seed_max_us": 36.57199814915657,
+            "seed_min_us": 35.613998770713806
+          }
+        },
+        "shape": [
+          640,
+          960,
+          768
+        ]
+      },
+      {
+        "bandit_reduction": {
+          "bandit_first": {
+            "median_percent": 4.430788796153529,
+            "seed_max_percent": 5.1141111411322715,
+            "seed_min_percent": 4.206513624811848,
+            "seed_values_percent": [
+              4.206513624811848,
+              4.430788796153529,
+              5.1141111411322715
+            ]
+          },
+          "curated": {
+            "median_percent": -0.02222313601636383,
+            "seed_max_percent": 4.290742696233718,
+            "seed_min_percent": -0.1471248549133053,
+            "seed_values_percent": [
+              -0.1471248549133053,
+              4.290742696233718,
+              -0.02222313601636383
+            ]
+          },
+          "fixed": {
+            "median_percent": 0.08109293307804188,
+            "seed_max_percent": 0.09019225253831253,
+            "seed_min_percent": -0.07343620146220697,
+            "seed_values_percent": [
+              -0.07343620146220697,
+              0.09019225253831253,
+              0.08109293307804188
+            ]
+          },
+          "pytorch": {
+            "median_percent": 19.506468704285652,
+            "seed_max_percent": 19.59895808391955,
+            "seed_min_percent": 18.578567072394115,
+            "seed_values_percent": [
+              19.59895808391955,
+              18.578567072394115,
+              19.506468704285652
+            ]
+          },
+          "random": {
+            "median_percent": 10.622085197382859,
+            "seed_max_percent": 10.714755714029,
+            "seed_min_percent": 1.987042748443535,
+            "seed_values_percent": [
+              1.987042748443535,
+              10.622085197382859,
+              10.714755714029
+            ]
+          }
+        },
+        "latencies": {
+          "bandit": {
+            "median_us": 54.20200154185295,
+            "seed_max_us": 54.45599928498268,
+            "seed_min_us": 46.79600149393082
+          },
+          "bandit_first": {
+            "median_us": 56.67399987578392,
+            "seed_max_us": 57.03800171613693,
+            "seed_min_us": 48.962000757455826
+          },
+          "curated": {
+            "median_us": 54.07800152897835,
+            "seed_max_us": 54.37999963760376,
+            "seed_min_us": 48.88800159096718
+          },
+          "fixed": {
+            "median_us": 54.127998650074005,
+            "seed_max_us": 54.34799939393997,
+            "seed_min_us": 46.56999930739403
+          },
+          "pytorch": {
+            "median_us": 67.33399629592896,
+            "seed_max_us": 67.63599812984467,
+            "seed_min_us": 57.473812252283096
+          },
+          "random": {
+            "median_us": 55.560000240802765,
+            "seed_max_us": 60.72000041604042,
+            "seed_min_us": 52.359689027071
+          }
+        },
+        "shape": [
+          896,
+          1408,
+          640
+        ]
+      }
+    ],
+    "suite": "bandit_unseen_v1",
+    "total_wall_s": 879.6025830000017
+  }
+]

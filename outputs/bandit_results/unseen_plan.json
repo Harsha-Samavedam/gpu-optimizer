@@ -1,0 +1,36 @@
+{
+  "batch_size": 512,
+  "budget": 16,
+  "created_utc": "2026-09-07T21:29:00.980938+00:00",
+  "model": "models/linucb_fp16_rtx3070.json",
+  "repetitions": 15,
+  "rounds": 5,
+  "rule": "Freeze existing model and hyperparameters; evaluate these additional shapes once with all baselines.",
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "shapes": [
+    [
+      640,
+      960,
+      768
+    ],
+    [
+      896,
+      1408,
+      640
+    ],
+    [
+      1023,
+      1025,
+      767
+    ],
+    [
+      2048,
+      256,
+      1024
+    ]
+  ]
+}
