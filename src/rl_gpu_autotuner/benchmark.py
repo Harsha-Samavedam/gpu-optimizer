@@ -26,17 +26,10 @@ class Measurement:
 class Benchmark(ABC):
     @abstractmethod
     def evaluate(self, workload: Workload, config: ScheduleConfig) -> Measurement:
-        """Compile/execute a config and return a robust latency measurement."""
+        pass
 
 
 class SimulatedBenchmark(Benchmark):
-    """Deterministic, noisy stand-in for a real GPU timing loop.
-
-    This is intentionally not a GPU performance model. It gives policy code an
-    expensive/noisy reward surface that rewards reasonable tile and pipeline
-    choices, while making unit tests independent of CUDA hardware.
-    """
-
     def __init__(self, seed: int = 0, noise_fraction: float = 0.015) -> None:
         self._seed = seed
         self._noise_fraction = noise_fraction
@@ -53,8 +46,6 @@ class SimulatedBenchmark(Benchmark):
         if workload.kernel is not KernelKind.MATMUL:
             volume *= 8
 
-        # Prefer tiles near a problem-dependent target; punish underutilization
-        # and excessive staging. This creates a nontrivial, reproducible surface.
         target_m = 64 if workload.shape[0] >= 512 else 32
         target_n = 64 if workload.shape[1] >= 512 else 32
         tile_penalty = 1 + abs(config.block_m - target_m) / target_m

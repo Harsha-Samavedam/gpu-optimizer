@@ -1,5 +1,3 @@
-"""FP16 Triton matrix multiplication used by the hardware benchmark backend."""
-
 from __future__ import annotations
 
 import triton
@@ -27,7 +25,6 @@ def _matmul_kernel(
     BLOCK_K: tl.constexpr,
     GROUP_SIZE_M: tl.constexpr,
 ):
-    """Compute one output tile of C = A @ B using FP32 accumulation."""
     pid = tl.program_id(axis=0)
     num_pid_m = tl.cdiv(M, BLOCK_M)
     num_pid_n = tl.cdiv(N, BLOCK_N)
@@ -70,12 +67,6 @@ def _matmul_kernel(
 
 
 def matmul_fp16(a, b, c, config: ScheduleConfig) -> None:
-    """Launch the parameterized FP16 matmul kernel.
-
-    Inputs must be contiguous rank-2 CUDA tensors with shapes ``[M, K]`` and
-    ``[K, N]``. Allocation and timing are intentionally owned by the benchmark
-    backend so they are not included in kernel latency.
-    """
     if a.ndim != 2 or b.ndim != 2 or c.ndim != 2:
         raise ValueError("matmul_fp16 requires rank-2 tensors")
     M, K = a.shape

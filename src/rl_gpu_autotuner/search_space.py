@@ -6,7 +6,6 @@ from .domain import ScheduleConfig, Workload
 
 
 def configs_for(workload: Workload) -> list[ScheduleConfig]:
-    """Return candidate schedules. Keep this deliberately constrained at first."""
     del workload  # Later: condition choices on kernel type/dimensions.
     configs = [
         ScheduleConfig(m, n, k, warps, stages)

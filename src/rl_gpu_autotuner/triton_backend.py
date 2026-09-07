@@ -1,9 +1,3 @@
-"""CUDA/Triton benchmark backend for the FP16 matmul milestone.
-
-Importing this module is safe on a CPU-only machine. Torch and Triton are
-loaded only when a real benchmark or preflight is requested.
-"""
-
 from __future__ import annotations
 
 import subprocess
@@ -17,7 +11,7 @@ from .domain import KernelKind, ScheduleConfig, Workload
 
 
 class TritonUnavailableError(RuntimeError):
-    """Raised when the optional CUDA/Triton runtime is not usable."""
+    pass
 
 
 @dataclass(frozen=True)
@@ -55,11 +49,6 @@ def _load_torch_cuda() -> Any:
 
 
 def triton_preflight(device: str | None = None) -> dict[str, object]:
-    """Return machine-readable CUDA/Triton readiness information.
-
-    This intentionally returns an unavailable result rather than raising, so it
-    can be run as a setup check after moving the project to a GPU machine.
-    """
     try:
         torch, triton = _load_runtime()
         selected = torch.device(device or "cuda")
@@ -87,13 +76,6 @@ def time_cuda_callable(
     timing_method: str = "cuda_graph",
     graph_batch_size: int = 512,
 ) -> tuple[float, ...]:
-    """Return per-call microseconds for hot-buffer, steady-state execution.
-
-    CUDA graphs amortize host dispatch over a captured batch. Events bracket
-    replay on the selected device/stream; each sample is a batch mean, not an
-    individual launch. No allocation, compilation, or reference work is timed.
-    The legacy event mode is retained only for diagnosing launch-gap bias.
-    """
     if warmup < 1 or repetitions < 3 or graph_batch_size < 1:
         raise ValueError(
             "positive warmup/batch size and at least 3 repetitions required"
@@ -116,7 +98,6 @@ def time_cuda_callable(
                     for _ in range(batch_size):
                         fn()
                 replay = graph.replay
-                # Instantiate and warm graph replay before recording any samples.
                 for _ in range(3):
                     replay()
                 stream.synchronize()
@@ -133,13 +114,6 @@ def time_cuda_callable(
 
 
 class TritonBenchmark(Benchmark):
-    """Measure a parameterized FP16 Triton matmul on a CUDA GPU.
-
-    Compilation and correctness validation precede timing. The default measures
-    hot-buffer CUDA graph batches, amortizing host dispatch. Legacy single-launch
-    events are available for diagnostics and can include host-induced idle gaps.
-    """
-
     def __init__(
         self,
         device: str | None = None,
@@ -234,7 +208,6 @@ class TritonBenchmark(Benchmark):
                 dtype=torch.float16,
             )
 
-            # This first launch forces JIT compilation and is deliberately not timed.
             matmul_fp16(a, b, output, config)
             torch.cuda.synchronize(self.device)
 
@@ -268,8 +241,6 @@ class TritonBenchmark(Benchmark):
             CompilationError,
             subprocess.CalledProcessError,
         ) as exc:
-            # A device-side fault can poison the CUDA context; continuing would
-            # incorrectly turn every subsequent candidate into a failed trial.
             if any(
                 message in str(exc).lower()
                 for message in ("illegal memory access", "device-side assert")
@@ -290,12 +261,6 @@ def benchmark_torch_matmul(
     timing_method: str = "cuda_graph",
     graph_batch_size: int = 512,
 ) -> Measurement:
-    """Measure PyTorch matmul (normally cuBLAS) as a library baseline.
-
-    This is intentionally outside the ``Benchmark`` interface: PyTorch matmul
-    has no Triton schedule configuration. Its median latency is reported next
-    to fixed, searched, and learned Triton schedules.
-    """
     if workload.kernel is not KernelKind.MATMUL or workload.dtype != "fp16":
         raise ValueError("the PyTorch baseline currently supports FP16 matmul only")
     if warmup < 1 or repetitions < 3:

@@ -8,16 +8,6 @@ from .policies import Trial
 
 
 class TuningEnvironment:
-    """Budgeted search with observable history and one measurement per action.
-
-    A supplied baseline is measured separately and its cost must be reported by
-    the experiment. Without one, only terminal quality earns positive reward:
-    1 / (1 + best_latency_us), with a fixed 1 us scale independent of actions.
-    For cross-workload training, supply a fixed baseline to normalize rewards.
-    Repeated actions are masked; independent finalist validation belongs outside
-    the search budget and must not be used to select a different winner.
-    """
-
     def __init__(
         self,
         benchmark: Benchmark,

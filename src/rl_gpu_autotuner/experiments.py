@@ -1,8 +1,4 @@
-"""Reproducible, budget-matched GPU searches and independent confirmation.
-
-Run with ``python -m rl_gpu_autotuner.experiments --output-dir results/suite``.
-The study measures hot-buffer graph throughput; it is not end-to-end latency.
-"""
+"""Run repeated GPU autotuning experiments."""
 
 from __future__ import annotations
 
@@ -27,7 +23,6 @@ OLD_WINNER = ScheduleConfig(64, 128, 32, 4, 3)
 
 
 def json_safe(value):
-    """Preserve failed trials in standards-compliant JSON."""
     if is_dataclass(value):
         return json_safe(asdict(value))
     if isinstance(value, dict):
@@ -49,11 +44,6 @@ def write_json(path: Path, value: object) -> None:
 
 
 def curated_configs() -> list[ScheduleConfig]:
-    """A predeclared 16-trial heuristic covering reuse, grouping, and pipeline depth.
-
-    Larger tile candidates follow the families in Triton's matmul tutorial.
-    This is a hand-written baseline, not a trained policy or an exhaustive oracle.
-    """
     return [
         FIXED,
         OLD_WINNER,
@@ -153,8 +143,6 @@ def run_case(
     )
     history: dict[str, list[Trial]] = {name: [] for name in selected}
     start_time = perf_counter()
-    # Interleave both searches to reduce order/temperature confounding. No sharing
-    # of measurements: each policy pays for its own trials, even on overlap.
     jobs = [
         (method, config) for method, configs in selected.items() for config in configs
     ]
@@ -213,7 +201,6 @@ def run_case(
         "selection_rule": "lowest search median; frozen before confirmation",
     }
     write_json(directory / "result.json", case)
-    # New inputs and new measurements; winners stay fixed throughout all rounds.
     for round_index in range(rounds):
         confirmation_seed = 10_000 + seed * rounds + round_index
         confirmation = TritonBenchmark(
@@ -253,7 +240,6 @@ def run_case(
 
 
 def run_diagnostic(directory: Path) -> None:
-    """Compare the old timer against three graph batch sizes, in shuffled order."""
     workload = Workload(KernelKind.MATMUL, (1024, 1024, 1024))
     records = []
     jobs = [

@@ -12,8 +12,6 @@ class KernelKind(str, Enum):
 
 @dataclass(frozen=True)
 class Workload:
-    """A kernel problem instance. Matmul uses (M, N, K); others use (rows, cols)."""
-
     kernel: KernelKind
     shape: tuple[int, ...]
     dtype: str = "fp16"
@@ -30,8 +28,6 @@ class Workload:
 
 @dataclass(frozen=True)
 class ScheduleConfig:
-    """The small, interpretable action space for our first tuner."""
-
     block_m: int
     block_n: int
     block_k: int
@@ -44,7 +40,6 @@ class ScheduleConfig:
         return self.num_warps * 32
 
     def is_legal(self) -> bool:
-        # Conservative constraints suitable for a first Triton-oriented space.
         return (
             all(
                 size >= 16 and size & (size - 1) == 0

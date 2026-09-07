@@ -39,7 +39,6 @@ class ReliableTuningTests(unittest.TestCase):
             launch, torch, "cuda:0", warmup=2, repetitions=3, graph_batch_size=100
         )
         self.assertEqual(samples, (20.0, 20.0, 20.0))
-        # Warm-up and capture invoke Python; measurement only replays the graph.
         self.assertEqual(launch.call_count, 102)
         self.assertGreaterEqual(torch.cuda.CUDAGraph.return_value.replay.call_count, 3)
 

@@ -50,7 +50,6 @@ class AutotunerTests(unittest.TestCase):
         self.assertIn("available", result)
 
     def test_cli_writes_simulated_results(self) -> None:
-        # Keep the migration-time result format testable without CUDA/Triton.
         from unittest.mock import patch
 
         from rl_gpu_autotuner import cli
