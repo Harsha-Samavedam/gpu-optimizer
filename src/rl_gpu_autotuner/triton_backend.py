@@ -113,6 +113,15 @@ def time_cuda_callable(
             return tuple(samples)
 
 
+def matmul_reference(a: Any, b: Any, torch: Any) -> Any:
+    previous = torch.backends.cuda.matmul.allow_tf32
+    try:
+        torch.backends.cuda.matmul.allow_tf32 = False
+        return torch.matmul(a.float(), b.float()).to(a.dtype)
+    finally:
+        torch.backends.cuda.matmul.allow_tf32 = previous
+
+
 class TritonBenchmark(Benchmark):
     def __init__(
         self,
@@ -167,7 +176,7 @@ class TritonBenchmark(Benchmark):
         b = torch.randn(
             (k, n), device=self.device, dtype=torch.float16, generator=generator
         )
-        reference = torch.matmul(a, b)
+        reference = matmul_reference(a, b, torch)
         self._tensor_cache[workload] = (a, b, reference)
         return a, b, reference
 
@@ -275,6 +284,19 @@ def benchmark_torch_matmul(
     b = torch.randn((k, n), device=selected, dtype=torch.float16, generator=generator)
     output = torch.empty((m, n), device=selected, dtype=torch.float16)
 
+    torch.matmul(a, b, out=output)
+    try:
+        torch.testing.assert_close(
+            output, matmul_reference(a, b, torch), rtol=1e-2, atol=1e-2
+        )
+    except AssertionError as exc:
+        return Measurement(
+            float("inf"),
+            valid=False,
+            detail=str(exc)[:500],
+            timing_method=timing_method,
+            batch_size=graph_batch_size if timing_method == "cuda_graph" else 1,
+        )
     samples_us = time_cuda_callable(
         lambda: torch.matmul(a, b, out=output),
         torch,

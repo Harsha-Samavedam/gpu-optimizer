@@ -62,6 +62,8 @@ class BanditExperimentTests(unittest.TestCase):
         self.assertEqual(prior.observations, 0)
         np.testing.assert_array_equal(prior.inverse, old_inverse)
         self.assertEqual(case["bandit_updates"], 3)
-        self.assertEqual(case["first_choice"], case["search"]["bandit"]["history"][0]["config"])
+        self.assertEqual(
+            case["first_choice"], case["search"]["bandit"]["history"][0]["config"]
+        )
         self.assertIn("bandit_first", case["summary"])
         self.assertEqual(len(case["budget_curve"]["bandit"]), 3)

@@ -13,6 +13,9 @@ from pathlib import Path
 from statistics import median
 from time import perf_counter
 
+import numpy as np
+
+from .bandit import LinearUCB, context_features, latency_reward
 from .domain import KernelKind, ScheduleConfig, Workload
 from .policies import SearchResult, Trial
 from .search_space import configs_for
@@ -128,9 +131,11 @@ def run_case(
     rounds: int = 5,
     repetitions: int = 15,
     batch_size: int = 512,
+    bandit_model: LinearUCB | None = None,
 ) -> dict:
     if not 1 <= budget <= 16 or rounds < 3:
         raise ValueError("budget must be 1..16 and confirmation rounds at least 3")
+    start_time = perf_counter()
     directory.mkdir(parents=True, exist_ok=False)
     universe = candidate_universe(workload)
     rng = random.Random(seed)
@@ -141,34 +146,63 @@ def run_case(
     benchmark = TritonBenchmark(
         seed=seed, repetitions=repetitions, graph_batch_size=batch_size
     )
-    history: dict[str, list[Trial]] = {name: [] for name in selected}
-    start_time = perf_counter()
-    jobs = [
-        (method, config) for method, configs in selected.items() for config in configs
-    ]
-    rng.shuffle(jobs)
+    model = bandit_model.copy() if bandit_model is not None else None
+    baseline = benchmark.evaluate(workload, FIXED) if model is not None else None
+    if baseline is not None and not baseline.usable:
+        raise RuntimeError(f"bandit reward baseline failed: {baseline.detail}")
+    features = (
+        np.array([context_features(workload, config) for config in universe])
+        if model
+        else None
+    )
+    available = np.ones(len(universe), dtype=bool)
+    bandit_rng = np.random.default_rng(seed)
+    methods = list(selected) + (["bandit"] if model else [])
+    history: dict[str, list[Trial]] = {name: [] for name in methods}
+    decision_seconds = {name: 0.0 for name in methods}
+    search_started = perf_counter()
     with (directory / "trials.jsonl").open("w") as log:
-        for index, (method, config) in enumerate(jobs):
-            trial_start = perf_counter()
-            measurement = benchmark.evaluate(workload, config)
-            history[method].append(Trial(config, measurement))
-            log.write(
-                json.dumps(
-                    json_safe(
-                        {
-                            "method": method,
-                            "trial": history[method][-1],
-                            "elapsed_s": perf_counter() - trial_start,
-                        }
-                    ),
-                    allow_nan=False,
+        for step in range(budget):
+            order = methods.copy()
+            rng.shuffle(order)
+            for method in order:
+                decision_start = perf_counter()
+                if method == "bandit":
+                    action = model.select(features, available, bandit_rng)
+                    available[action] = False
+                    config = universe[action]
+                else:
+                    config = selected[method][step]
+                decision_seconds[method] += perf_counter() - decision_start
+                trial_start = perf_counter()
+                measurement = benchmark.evaluate(workload, config)
+                history[method].append(Trial(config, measurement))
+                trial_elapsed = perf_counter() - trial_start
+                if method == "bandit":
+                    update_start = perf_counter()
+                    model.update(
+                        features[action],
+                        latency_reward(measurement, baseline.latency_us),
+                    )
+                    decision_seconds[method] += perf_counter() - update_start
+                log.write(
+                    json.dumps(
+                        json_safe(
+                            {
+                                "method": method,
+                                "step": step + 1,
+                                "trial": history[method][-1],
+                                "elapsed_s": trial_elapsed,
+                            }
+                        ),
+                        allow_nan=False,
+                    )
+                    + "\n"
                 )
-                + "\n"
-            )
-            log.flush()
-            if (index + 1) % 8 == 0:
+                log.flush()
+            if (step + 1) % 4 == 0:
                 print(
-                    f"{workload.shape} seed={seed}: {index + 1}/{len(jobs)} search trials",
+                    f"{workload.shape} seed={seed}: {step + 1}/{budget} trials per search",
                     flush=True,
                 )
     winners = {}
@@ -187,7 +221,8 @@ def run_case(
         "seed": seed,
         "candidate_count": len(universe),
         "budget_per_search": budget,
-        "search_wall_s": perf_counter() - start_time,
+        "search_wall_s": perf_counter() - search_started,
+        "setup_wall_s": search_started - start_time,
         "search": json_safe(winners),
         "confirmation": [],
         "timing": {
@@ -195,10 +230,35 @@ def run_case(
             "batch_size": batch_size,
             "samples": repetitions,
             "cache_policy": "hot repeated buffers",
+            "correctness_reference": "FP32 matmul, TF32 disabled, rounded to FP16; rtol=atol=0.01",
             "warmup_launches": 10,
         },
-        "confirmation_budget": {"rounds": rounds, "measurements_per_round": 4},
+        "confirmation_budget": {
+            "rounds": rounds,
+            "measurements_per_round": len(methods) + 2 + int(model is not None),
+        },
         "selection_rule": "lowest search median; frozen before confirmation",
+        "common_reference_evaluations": 1 if model else 0,
+        "first_choice": asdict(history["bandit"][0].config) if model else None,
+        "common_reference": json_safe(baseline),
+        "decision_seconds": decision_seconds,
+        "bandit_updates": model.observations - bandit_model.observations
+        if model
+        else 0,
+        "budget_curve": {
+            name: [
+                min(
+                    (
+                        t.measurement.latency_us
+                        for t in trials[:i]
+                        if t.measurement.usable
+                    ),
+                    default=None,
+                )
+                for i in range(1, len(trials) + 1)
+            ]
+            for name, trials in history.items()
+        },
     }
     write_json(directory / "result.json", case)
     for round_index in range(rounds):
@@ -206,7 +266,7 @@ def run_case(
         confirmation = TritonBenchmark(
             seed=confirmation_seed, repetitions=repetitions, graph_batch_size=batch_size
         )
-        methods = ["pytorch", "fixed", "random", "curated"]
+        methods = ["pytorch", "fixed", *winners] + (["bandit_first"] if model else [])
         rng.shuffle(methods)
         row = {
             "round": round_index,
@@ -224,7 +284,13 @@ def run_case(
                     graph_batch_size=batch_size,
                 )
             else:
-                config = FIXED if method == "fixed" else winners[method].config
+                config = (
+                    FIXED
+                    if method == "fixed"
+                    else history["bandit"][0].config
+                    if method == "bandit_first"
+                    else winners[method].config
+                )
                 measurement = confirmation.evaluate(workload, config)
             row["measurements"][method] = json_safe(measurement)
         row["telemetry_after"] = telemetry()
@@ -300,6 +366,7 @@ def main() -> None:
     parser.add_argument("--repetitions", type=int, default=15)
     parser.add_argument("--batch-size", type=int, default=512)
     parser.add_argument("--diagnostic-only", action="store_true")
+    parser.add_argument("--bandit-model", type=Path)
     args = parser.parse_args()
     if args.output_dir.exists():
         parser.error(
@@ -324,6 +391,16 @@ def main() -> None:
         parser.error(str(preflight))
     import torch
 
+    bandit_model, bandit_metadata = None, None
+    if args.bandit_model:
+        from .train_bandit import device_key
+
+        bandit_model, bandit_metadata = LinearUCB.load(args.bandit_model)
+        trained_shapes = {tuple(shape) for shape in bandit_metadata["training_shapes"]}
+        if trained_shapes & {workload.shape for workload in shapes}:
+            parser.error("test shapes overlap with bandit training shapes")
+        if bandit_metadata["device_key"] != device_key(preflight):
+            parser.error("bandit GPU/runtime differs from current preflight")
     args.output_dir.mkdir(parents=True)
     write_json(
         args.output_dir / "manifest.json",
@@ -338,6 +415,8 @@ def main() -> None:
             "repetitions": args.repetitions,
             "batch_size": args.batch_size,
             "curated_configs": curated_configs(),
+            "bandit_metadata": bandit_metadata,
+            "bandit_model": str(args.bandit_model) if args.bandit_model else None,
             "torch_allow_fp16_reduced_precision_reduction": torch.backends.cuda.matmul.allow_fp16_reduced_precision_reduction,
             "scope": "single GPU, hot buffers, FP16 inputs/outputs, correctness rtol=atol=0.01",
         },
@@ -358,6 +437,7 @@ def main() -> None:
                     rounds=args.rounds,
                     repetitions=args.repetitions,
                     batch_size=args.batch_size,
+                    bandit_model=bandit_model,
                 )
             )
     write_json(
