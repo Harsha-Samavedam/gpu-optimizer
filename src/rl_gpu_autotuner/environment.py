@@ -11,7 +11,9 @@ class TuningEnvironment:
     """Budgeted search with observable history and one measurement per action.
 
     A supplied baseline is measured separately and its cost must be reported by
-    the experiment. Without one, the first usable trial anchors the reward.
+    the experiment. Without one, only terminal quality earns positive reward:
+    1 / (1 + best_latency_us), with a fixed 1 us scale independent of actions.
+    For cross-workload training, supply a fixed baseline to normalize rewards.
     Repeated actions are masked; independent finalist validation belongs outside
     the search budget and must not be used to select a different winner.
     """
@@ -90,7 +92,7 @@ class TuningEnvironment:
                 self.best_config = self.candidates[action]
             reward = (
                 0.0
-                if not math.isfinite(previous_best)
+                if self.baseline_latency_us is None
                 else math.log(previous_best / self.best_latency)
             )
         self.history.append(Trial(self.candidates[action], measurement))
@@ -99,6 +101,12 @@ class TuningEnvironment:
         done = self.evaluations >= self.budget or len(self.tried) == len(
             self.candidates
         )
+        if (
+            done
+            and self.baseline_latency_us is None
+            and math.isfinite(self.best_latency)
+        ):
+            reward += 1.0 / (1.0 + self.best_latency)
         return (
             self.observation(),
             reward,

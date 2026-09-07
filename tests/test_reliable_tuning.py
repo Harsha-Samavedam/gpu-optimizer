@@ -122,13 +122,14 @@ class ReliableTuningTests(unittest.TestCase):
         self.assertTrue(ScheduleConfig(128, 256, 64, 8, 3, group_size_m=4).is_legal())
         self.assertFalse(ScheduleConfig(32, 32, 32, 4, 2, group_size_m=0).is_legal())
 
-
     def test_without_baseline_return_rewards_final_quality_not_slow_first_trial(self):
         returns = []
         for latencies in ((100, 10), (1, 10), (10, 1)):
             env = TuningEnvironment(
                 SequenceBenchmark([Measurement(value) for value in latencies]),
-                self.workload, self.configs, 2,
+                self.workload,
+                self.configs,
+                2,
             )
             returns.append(sum(env.step(action)[1] for action in (0, 1)))
         self.assertGreater(returns[1], returns[0])

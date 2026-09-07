@@ -96,25 +96,27 @@ def telemetry() -> dict[str, object]:
         return {"error": str(exc)}
 
 
+def usable_record(record: dict) -> bool:
+    latency = record.get("latency_us")
+    return bool(
+        record.get("valid")
+        and isinstance(latency, (int, float))
+        and math.isfinite(latency)
+        and latency > 0
+    )
+
+
 def summarize_case(case: dict) -> dict:
     rounds = case["confirmation"]
     summaries = {}
     for method in rounds[0]["measurements"]:
         records = [row["measurements"][method] for row in rounds]
-        valid = [
-            record
-            for record in records
-            if record["valid"] and record["latency_us"] is not None
-        ]
+        valid = [record for record in records if usable_record(record)]
         ratios = []
         for row in rounds:
             reference = row["measurements"]["pytorch"]
             measured = row["measurements"][method]
-            if (
-                reference["valid"]
-                and measured["valid"]
-                and measured["latency_us"] is not None
-            ):
+            if usable_record(reference) and usable_record(measured):
                 ratios.append(reference["latency_us"] / measured["latency_us"])
         values = [record["latency_us"] for record in valid]
         summaries[method] = {
@@ -213,7 +215,7 @@ def run_case(
     write_json(directory / "result.json", case)
     # New inputs and new measurements; winners stay fixed throughout all rounds.
     for round_index in range(rounds):
-        confirmation_seed = seed + 10_000 + round_index
+        confirmation_seed = 10_000 + seed * rounds + round_index
         confirmation = TritonBenchmark(
             seed=confirmation_seed, repetitions=repetitions, graph_batch_size=batch_size
         )

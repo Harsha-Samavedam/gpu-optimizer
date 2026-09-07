@@ -12,13 +12,19 @@ from rl_gpu_autotuner.domain import KernelKind, Workload
 class ExperimentTests(unittest.TestCase):
     def test_summary_rejects_zero_negative_and_missing_reference_latencies(self):
         for value in (0, -1, None, math.nan):
-            case = {'confirmation': [{'measurements': {
-                'pytorch': {'latency_us': value, 'valid': True},
-                'random': {'latency_us': value, 'valid': True},
-            }}]}
+            case = {
+                "confirmation": [
+                    {
+                        "measurements": {
+                            "pytorch": {"latency_us": value, "valid": True},
+                            "random": {"latency_us": value, "valid": True},
+                        }
+                    }
+                ]
+            }
             result = experiments.summarize_case(case)
-            self.assertFalse(result['random']['all_valid'])
-            self.assertIsNone(result['random']['paired_speedup_vs_pytorch'])
+            self.assertFalse(result["random"]["all_valid"])
+            self.assertIsNone(result["random"]["paired_speedup_vs_pytorch"])
 
     def test_strict_json_keeps_failure_detail_and_replaces_nonfinite_numbers(self):
         with TemporaryDirectory() as directory:
