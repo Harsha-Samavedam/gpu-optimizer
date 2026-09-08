@@ -10,3 +10,5 @@ htmlcov/
 tmp/
 output/
 results/
+# Personal resume artifact generated outside the project deliverables.
+outputs/Harsha_Samavedam_Resume_GPU_Updated.tex

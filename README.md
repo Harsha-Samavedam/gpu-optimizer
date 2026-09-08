@@ -1,93 +1,67 @@
-# RL-GPU-Autotuner
+# Contextual-Bandit GPU Kernel Autotuner
 
-GPU kernel autotuning with Triton. The project benchmarks FP16 matrix multiplication and compares fixed configurations, random search, a hand-picked shortlist, and a learned contextual bandit under a fixed trial budget.
+A small Triton autotuning project for FP16 matrix multiplication. Given a matrix shape and a 16-trial measurement budget, the tuner chooses tile sizes, warp counts, pipeline stages, and program-group settings to benchmark.
 
-It includes a CPU simulator and a budgeted tuning environment. The bandit is trained on real GPU measurements; a full sequential RL policy has not been trained.
+The learned method is a linear contextual bandit with online updates. It is not a full sequential RL policy.
+
+## What is included
+
+- FP16 Triton matmul kernel with configurable schedules.
+- CUDA Graph timing, FP32-reference correctness checks, and repeated confirmation runs.
+- Fixed, random-search, shortlist, and contextual-bandit baselines.
+- A saved RTX 3070 bandit model trained on 320 measurements from ten shapes.
+- CPU tests for search budgets, feature construction, online ridge updates, timing, and result handling.
 
 ## Setup
 
-Requires Python 3.10 or newer. GPU benchmarks also need Linux, a supported NVIDIA GPU and driver, CUDA-enabled PyTorch, Triton, a C compiler, and Python development headers.
+Requires Python 3.10+. GPU runs require Linux, a supported NVIDIA GPU, CUDA-enabled PyTorch, and Triton.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -e .
-```
-
-For GPU support, install PyTorch using the [official installation instructions](https://pytorch.org/get-started/locally/), then:
-
-```bash
 python -m pip install triton numpy
 python -m rl_gpu_autotuner.cli preflight
 ```
 
-Preflight checks runtime availability. If Triton compilation reports a missing `Python.h`, install the development headers matching your Python version.
-
-## Usage
-
-Run a simulated comparison:
+## Run
 
 ```bash
+# CPU simulator
 python -m rl_gpu_autotuner.cli compare --shape 1024,1024,1024 --budget 16
-```
 
-Run on the GPU:
-
-```bash
+# GPU comparison
 python -m rl_gpu_autotuner.cli compare \
   --backend triton --shape 1024,1024,1024 --budget 16 \
   --results-json results/comparison.json
-```
 
-Shapes are specified as `M,N,K` for `A[M,K] @ B[K,N]`. Add `--oracle` to evaluate the full search space.
-
-Run the repeated experiment suite or check the timing method:
-
-```bash
-python -m rl_gpu_autotuner.experiments --output-dir results/suite
-python -m rl_gpu_autotuner.experiments --output-dir results/timing --diagnostic-only
-```
-
-The suite defaults to four shapes, three search seeds, 16 trials per search, and five confirmation rounds. Choose a new output directory for each run. Results include all trials, selected configurations, timing samples, and GPU telemetry.
-
-Train and evaluate the contextual bandit:
-
-```bash
-OPENBLAS_NUM_THREADS=1 python -m rl_gpu_autotuner.train_bandit collect \
-  --output-dir results/training
+# Train and evaluate the bandit
+OPENBLAS_NUM_THREADS=1 python -m rl_gpu_autotuner.train_bandit collect --output-dir results/training
 OPENBLAS_NUM_THREADS=1 python -m rl_gpu_autotuner.train_bandit fit \
   --dataset results/training/dataset.json --model models/bandit.json
 OPENBLAS_NUM_THREADS=1 python -m rl_gpu_autotuner.experiments \
   --output-dir results/bandit --bandit-model models/bandit.json
 ```
 
-The saved [RTX 3070 model](models/linucb_fp16_rtx3070.json) uses 320 measurements from ten training shapes. Training-only cross-validation selects the ridge penalty and exploration bonus. Evaluation rejects overlapping training shapes and a different GPU/runtime. Each evaluation starts from the saved model, updates only from its own trials, and also confirms the initial recommendation separately. The runner records the extra fixed reference measurement and tuning time.
+## Results
 
-## Benchmarks
+On an RTX 3070 with PyTorch 2.14 and Triton 3.8, each method received 16 search trials. Latencies are microseconds; values are medians of repeated, independently confirmed measurements. The percentages use paired measurements, so they do not always match ratios of displayed medians.
 
-Both Triton and PyTorch use CUDA Graph batches to reduce Python launch overhead. Timings measure repeated operations on hot buffers, with compilation and correctness checks outside the timed region. Selected configurations are remeasured separately in randomized order.
-
-Fresh RTX 3070 results with PyTorch 2.14 and Triton 3.8, in microseconds. Each search uses 16 trials:
-
-| Shape (M,N,K) | PyTorch | Fixed | Random | Shortlist | Bandit |
+| Shape (M,N,K) | PyTorch | Random | Bandit | Bandit vs. PyTorch | Bandit vs. random |
 |---|---:|---:|---:|---:|---:|
-| 512×512×512 | 12.918 | 13.072 | 12.670 | 11.002 | 10.740 |
-| 1024×1024×1024 | 86.322 | 69.774 | 72.438 | 66.664 | 66.682 |
-| 512×2048×1024 | 127.808 | 70.376 | 70.420 | 66.590 | 66.676 |
-| 1000×769×513 | 56.832 | 56.302 | 56.478 | 56.468 | 44.764 |
-| 640×960×768 | 35.170 | 35.378 | 35.926 | 34.302 | 35.614 |
-| 896×1408×640 | 67.334 | 54.128 | 55.560 | 54.078 | 54.202 |
-| 1023×1025×767 | 84.066 | 99.840 | 101.098 | 93.394 | 96.694 |
-| 2048×256×1024 | 46.246 | 38.346 | 38.504 | 38.342 | 39.000 |
+| 512x512x512 | 12.918 | 12.670 | 10.740 | 16.80% faster | 14.41% faster |
+| 1024x1024x1024 | 86.322 | 72.438 | 66.682 | 22.78% faster | 6.13% faster |
+| 512x2048x1024 | 127.808 | 70.420 | 66.676 | 47.87% faster | 5.60% faster |
+| 1000x769x513 | 56.832 | 56.478 | 44.764 | 21.17% faster | 20.75% faster |
+| 640x960x768 | 35.170 | 35.926 | 35.614 | 1.09% slower | 1.31% faster |
+| 896x1408x640 | 67.334 | 55.560 | 54.202 | 19.51% faster | 10.62% faster |
+| 1023x1025x767 | 84.066 | 101.098 | 96.694 | 15.06% slower | 3.71% faster |
+| 2048x256x1024 | 46.246 | 38.504 | 39.000 | 15.76% faster | 1.25% slower |
 
-Values are medians of three per-seed confirmation medians. The bandit improves the original irregular case substantially, but loses to the shortlist on three of four additional shapes. It does not consistently beat PyTorch. Small differences need further validation on a quiet GPU.
+The bandit beat PyTorch on six of eight shapes and random search on seven of eight. Results are specific to this GPU, runtime, kernel, candidate space, and hot-buffer timing setup. Full methodology, limitations, and raw exports are in [the results report](outputs/contextual_bandit_2026-09-07.md).
 
-The [full report](outputs/contextual_bandit_2026-09-07.md) includes paired comparisons, first-choice results, costs, correctness details, and the decision about full RL. [Complete measurements](outputs/bandit_results/README.md) and the trained model are included in version control. The [earlier timing study](outputs/reliable_gpu_experiments_2026-09-07.md) is retained for reference.
-
-## Development
+## Tests
 
 ```bash
 python -m unittest discover -s tests -v
 ```
-
-Next steps are broader training coverage, tuning budgets based on elapsed time, and a stop action when further measurements are unlikely to pay off.

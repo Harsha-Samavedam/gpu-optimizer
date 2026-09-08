@@ -1,7 +1,7 @@
 [project]
 name = "rl-gpu-autotuner"
 version = "0.1.0"
-description = "RL-ready, budget-aware GPU kernel autotuning research project"
+description = "Budget-aware Triton GPU kernel autotuning experiments"
 requires-python = ">=3.10"
 dependencies = ["numpy>=1.24"]
 

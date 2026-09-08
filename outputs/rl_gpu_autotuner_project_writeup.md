@@ -134,13 +134,13 @@ This project is not the first use of machine learning or RL in compiler optimiza
 
 The project differs in scope and purpose. It focuses on an understandable, Triton-level schedule-selection problem rather than generating arbitrary source code or manipulating assembly. Its contribution is a reproducible, learning-oriented comparison of budget-aware policies and conventional search methods on real GPU measurements.
 
-### Usefulness
+### What this project teaches
 
 The project is useful in three ways:
 
 1. **Practical systems relevance.** Kernel tuning matters for efficient ML training and inference, especially when standard libraries cannot provide a customized fused implementation.
 2. **Research and engineering practice.** It teaches correct GPU benchmarking, workload characterization, compiler scheduling, and experimental baselines—not only RL training.
-3. **Portfolio value.** It demonstrates an unusual but coherent combination of RL, computer architecture, GPU programming, compilers, and performance engineering.
+3. **Systems tradeoffs.** It connects RL, computer architecture, GPU programming, compilers, and performance engineering in one constrained measurement problem.
 
 A successful outcome is not limited to showing an RL speedup. It may demonstrate that RL needs fewer trials on related workloads, identify where classical search remains superior, or reveal which hardware/workload features predict a schedule's performance. A negative result with careful benchmarking and fair baselines is still informative.
 
